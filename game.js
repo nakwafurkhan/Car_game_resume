@@ -1,156 +1,95 @@
-// Initialize variables
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const startScreen = document.getElementById('startScreen');
-const modal = document.getElementById('modal');
-const modalContent = document.getElementById('modalContent');
-const closeModal = document.getElementById('closeModal');
+        // DOM elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const startGameBtn = document.getElementById('start-game');
+        const viewResumeBtn = document.getElementById('view-resume');
+        const contactInfoBtn = document.getElementById('contact-info');
+        const car = document.getElementById('car');
+        const leftBtn = document.getElementById('left');
+        const rightBtn = document.getElementById('right');
+        const gameArea = document.getElementById('game-area');
 
-// Set up car variables
-let carX = 0;
-let carY = 0;
-let carWidth = 0;
-let carHeight = 0;
-let carSpeed = 5; // Speed of the car
-let obstacles = []; // Array to store obstacles
-let isGameRunning = false;
-let touchStartX = 0; // For swipe controls
-let canvasWidth = 800;
-let canvasHeight = 600;
-
-// Event listeners for buttons
-document.getElementById('playBtn').addEventListener('click', () => {
-    startScreen.style.display = 'none';
-    canvas.style.display = 'block';
-    startGame();
-});
-
-closeModal.addEventListener('click', () => {
-    modal.style.display = 'none';
-});
-
-// Make the canvas responsive
-function setCanvasSize() {
-    // Adjust canvas size based on the screen size
-    canvas.width = Math.min(window.innerWidth, canvasWidth);
-    canvas.height = Math.min(window.innerHeight, canvasHeight);
-
-    // Set the car's initial position
-    carWidth = canvas.width / 8;  // Adjust car size relative to canvas width
-    carHeight = carWidth / 2;
-    carX = (canvas.width - carWidth) / 2;  // Center the car horizontally
-    carY = canvas.height - carHeight - 20;  // Position the car near the bottom
-}
-
-// Start the game
-function startGame() {
-    isGameRunning = true;
-    setCanvasSize();  // Make sure canvas is resized correctly before starting
-    gameLoop();
-}
-
-// Handle window resize
-window.addEventListener('resize', () => {
-    setCanvasSize();  // Resize canvas on window resize
-});
-
-// Game loop
-function gameLoop() {
-    if (!isGameRunning) return;
-    update();
-    render();
-    requestAnimationFrame(gameLoop);
-}
-
-// Update game state
-function update() {
-    // Update car position based on input and obstacles
-    obstacles.forEach((obstacle, index) => {
-        obstacle.y += 5;  // Move obstacle down
-
-        // Remove obstacles that go off the screen
-        if (obstacle.y > canvas.height) {
-            obstacles.splice(index, 1);
-        }
-
-        // Check for collision between car and obstacle
-        if (
-            carX < obstacle.x + obstacle.width &&
-            carX + carWidth > obstacle.x &&
-            carY < obstacle.y + obstacle.height &&
-            carY + carHeight > obstacle.y
-        ) {
-            displayResumeInfo("You encountered a challenge!");
-        }
-    });
-
-    // Randomly generate new obstacles (roadblocks)
-    if (Math.random() < 0.02) {
-        obstacles.push({
-            x: Math.random() * (canvas.width - 50),
-            y: 0,
-            width: 50,
-            height: 50,
-            color: 'red' // Color to represent challenges
+        let carPosition = 0;
+        const carSpeed = 5;
+        const gameAreaWidth = gameArea.offsetWidth;
+        
+        // Handle Game Start
+        startGameBtn.addEventListener('click', () => {
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            startGame();
         });
-    }
-}
 
-// Render game objects
-function render() {
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Placeholder functions for viewing resume and contact info
+        viewResumeBtn.addEventListener('click', () => {
+            alert("Resume Overview: Frontend Developer with expertise in React, JavaScript, and responsive design.");
+        });
 
-    // Draw the road
-    ctx.fillStyle = "#333";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+        contactInfoBtn.addEventListener('click', () => {
+            alert("Contact: email@example.com | LinkedIn: linkedin.com/in/yourprofile | GitHub: github.com/yourusername");
+        });
 
-    // Draw the car
-    ctx.fillStyle = "#555";
-    ctx.fillRect(carX, carY, carWidth, carHeight);
+        // Game Logic
+        let leftPressed = false;
+        let rightPressed = false;
+        const gameInterval = 1000 / 60;  // 60 FPS
 
-    // Draw obstacles
-    obstacles.forEach(obstacle => {
-        ctx.fillStyle = obstacle.color;
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-    });
-}
+        function startGame() {
+            // Start game loop
+            setInterval(() => {
+                updateGameState();
+                renderGame();
+            }, gameInterval);
+        }
 
-// Example function for collision and displaying modal
-function displayResumeInfo(text) {
-    modalContent.innerText = text;
-    modal.style.display = 'block';
-}
+        function updateGameState() {
+            // Update car position
+            if (leftPressed && carPosition > 0) {
+                carPosition -= carSpeed;
+            }
+            if (rightPressed && carPosition < gameAreaWidth - car.offsetWidth) {
+                carPosition += carSpeed;
+            }
+        }
 
-// Add keyboard control (for desktop)
-window.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') moveRight();
-    if (e.key === 'ArrowLeft') moveLeft();
-});
+        function renderGame() {
+            // Render car position on screen
+            car.style.left = `${carPosition}px`;
+        }
 
-// Add swipe control (for mobile)
-canvas.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;  // Record the initial touch position
-});
+        // Event Listeners for Button Controls
+        leftBtn.addEventListener('mousedown', () => leftPressed = true);
+        leftBtn.addEventListener('mouseup', () => leftPressed = false);
+        leftBtn.addEventListener('mouseleave', () => leftPressed = false);
 
-canvas.addEventListener('touchmove', (e) => {
-    const touchX = e.touches[0].clientX;
-    if (touchX - touchStartX > 50) {
-        moveRight();  // If the swipe is right
-    } else if (touchX - touchStartX < -50) {
-        moveLeft();   // If the swipe is left
-    }
-});
+        rightBtn.addEventListener('mousedown', () => rightPressed = true);
+        rightBtn.addEventListener('mouseup', () => rightPressed = false);
+        rightBtn.addEventListener('mouseleave', () => rightPressed = false);
 
-// Car movement functions
-function moveRight() {
-    if (carX + carWidth + carSpeed <= canvas.width) {
-        carX += carSpeed;
-    }
-}
+        // Keyboard Controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') leftPressed = true;
+            if (e.key === 'ArrowRight') rightPressed = true;
+        });
 
-function moveLeft() {
-    if (carX - carSpeed >= 0) {
-        carX -= carSpeed;
-    }
-}
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft') leftPressed = false;
+            if (e.key === 'ArrowRight') rightPressed = false;
+        });
+
+        // Touch Controls for Mobile
+        let touchStartX = 0;
+        gameScreen.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        gameScreen.addEventListener('touchmove', (e) => {
+            const touchEndX = e.touches[0].clientX;
+            if (touchEndX < touchStartX) leftPressed = true;
+            if (touchEndX > touchStartX) rightPressed = true;
+        });
+
+        gameScreen.addEventListener('touchend', () => {
+            leftPressed = false;
+            rightPressed = false;
+        });
